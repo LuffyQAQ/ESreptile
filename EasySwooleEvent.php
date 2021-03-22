@@ -1,32 +1,38 @@
 <?php
+
+
 namespace EasySwoole\EasySwoole;
 
 
-use App\Process\ConsumeProcess;
-use App\Process\ProductProcess;
-use EasySwoole\EasySwoole\Swoole\EventRegister;
+use EasySwoole\Component\Di;
 use EasySwoole\EasySwoole\AbstractInterface\Event;
+use EasySwoole\EasySwoole\Swoole\EventRegister;
 use EasySwoole\Http\Request;
 use EasySwoole\Http\Response;
 use EasySwoole\Redis\Config\RedisConfig;
-use EasySwoole\RedisPool\Redis;
+use EasySwoole\RedisPool\RedisPool;
+use App\Process\ConsumeProcess;
+use App\Process\ProductProcess;
 
 class EasySwooleEvent implements Event
 {
-
     public static function initialize()
     {
-        // TODO: Implement initialize() method.
         date_default_timezone_set('Asia/Shanghai');
-        //注册redis连接池
+        //注册连接池
         $redisData = Config::getInstance()->getConf('REDIS');
         $redisConfig = new RedisConfig($redisData);
-        Redis::getInstance()->register('redis',$redisConfig);
+        RedisPool::getInstance()->register($redisConfig,'redis');
+
+        //onRequest
+        Di::getInstance()->set(SysConst::HTTP_GLOBAL_ON_REQUEST,function (Request $request,Response $response){
+            return true;
+        });
+
     }
 
     public static function mainServerCreate(EventRegister $register)
     {
-        // TODO: Implement mainServerCreate() method.
         //设置爬取链接
         \App\Utility\Config::getInstance()
             ->setStartUrl('http://www.netbian.com/meinv/index_2.htm')
@@ -40,17 +46,5 @@ class EasySwooleEvent implements Event
         ServerManager::getInstance()
             ->getSwooleServer()
             ->addProcess((new ConsumeProcess())->getProcess());
-
-    }
-
-    public static function onRequest(Request $request, Response $response): bool
-    {
-        // TODO: Implement onRequest() method.
-        return true;
-    }
-
-    public static function afterRequest(Request $request, Response $response): void
-    {
-        // TODO: Implement afterAction() method.
     }
 }

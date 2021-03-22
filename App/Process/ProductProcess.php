@@ -18,6 +18,7 @@ class ProductProcess extends AbstractProcess
 
     protected function run($arg)
     {
+
         // TODO: Implement run() method.
         go(function (){
             $config = Config::getInstance();
@@ -45,13 +46,19 @@ class ProductProcess extends AbstractProcess
                         }
                         // 开始生产,根据内容，设置规则
                         libxml_use_internal_errors(true);
-                        $ql = QueryList::html($body);
+
+                        //处理中文乱码内容
+                        $body =iconv('GBK','UTF-8',$body);
+
+
+                        $ql = QueryList::getInstance()->html($body);
+
                         $rules = [
-                            'src' => ['.list ul img', 'src'],
-                            'alt' => ['.list ul img', 'alt'],
+                            'src' => ['img', 'src'],
+                            'alt' => ['img', 'alt'],
                         ];
                         $nextUrl = $ql->find('.page .prev')->eq(1)->attr('href');
-                        $imgList = $ql->rules($rules)->encoding('UTF-8','GB2312')->query()->getData()->all();
+                        $imgList = $ql->rules($rules)->range('.list li')->query()->getData()->all();
                         foreach ($imgList as $img)
                         {
                             RedisQueue::getInstance()->push(CONSUME,$img);
