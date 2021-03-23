@@ -33,7 +33,7 @@ class EasySwooleEvent implements Event
 
     public static function mainServerCreate(EventRegister $register)
     {
-        //设置爬取链接
+        //设置爬取链接 // 可修改图片分类meinv，keai，qiche等等分类
         \App\Utility\Config::getInstance()
             ->setStartUrl('http://www.netbian.com/meinv/index_2.htm')
             ->setConsumeCoroutineNum(5)
